@@ -1,5 +1,6 @@
 """Health check and monitoring service for the library system."""
 
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any
@@ -128,8 +129,6 @@ class HealthService:
     def _check_disk_space(self) -> Dict[str, Any]:
         """Check available disk space."""
         try:
-            import shutil
-
             total, used, free = shutil.disk_usage("/")
 
             # Convert to GB
