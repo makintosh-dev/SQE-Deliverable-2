@@ -166,11 +166,28 @@ class Book:
         self._borrowed_date = datetime.now()
         self._due_date = self._borrowed_date + timedelta(days=loan_period_days)
 
+    def calculate_late_fee(self, fee_per_day: float) -> float:
+        """Calculate late fees for this book based on the given daily fee rate."""
+        if not self.is_overdue():
+            return 0.0
+        return self.days_overdue() * fee_per_day
+
     def return_book(self) -> None:
         """Mark the book as returned."""
         self._borrower = None
         self._borrowed_date = None
         self._due_date = None
+
+    def restore_borrow_state(
+        self,
+        borrower: "Member",
+        borrowed_date: Optional[datetime] = None,
+        due_date: Optional[datetime] = None,
+    ) -> None:
+        """Restore the borrowing state during deserialization."""
+        self._borrower = borrower
+        self._borrowed_date = borrowed_date
+        self._due_date = due_date
 
     def to_dict(self) -> dict:
         """

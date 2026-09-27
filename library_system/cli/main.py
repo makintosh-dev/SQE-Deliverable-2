@@ -118,9 +118,8 @@ class LibraryCLI:
             book = self.library.get_book(isbn)
             member.return_book(book)
 
-            late_fees = 0.0
-            if book.days_overdue() > 0:
-                late_fees = book.days_overdue() * self.settings.late_fee_per_day
+            late_fees = book.calculate_late_fee(self.settings.late_fee_per_day)
+            if late_fees > 0.0:
                 print(f"\nBook was {book.days_overdue()} days overdue.")
                 print(f"Late fee: ${late_fees:.2f}")
 
@@ -216,7 +215,7 @@ class LibraryCLI:
         print("\n=== Overdue Books ===")
         for book in overdue_books:
             days_overdue = book.days_overdue()
-            late_fee = days_overdue * self.settings.late_fee_per_day
+            late_fee = book.calculate_late_fee(self.settings.late_fee_per_day)
             print(f"  '{book.title}' - Borrowed by {book.borrower.name}")
             print(f"    Due: {book.due_date.strftime('%Y-%m-%d')}")
             print(f"    Days Overdue: {days_overdue}")

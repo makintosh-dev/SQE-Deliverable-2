@@ -153,21 +153,18 @@ class Member(Person):
         """
         return [book for book in self._borrowed_books if book.is_overdue()]
 
+    def restore_borrowed_book(self, book: Book) -> None:
+        """Restore a borrowed book reference during deserialization."""
+        if book not in self._borrowed_books:
+            self._borrowed_books.append(book)
+
+    def restore_membership_date(self, membership_date: datetime) -> None:
+        """Restore the membership join date during deserialization."""
+        self._membership_date = membership_date
+
     def calculate_late_fees(self, fee_per_day: float = 0.50) -> float:
-        """
-        Calculate total late fees for overdue books.
-
-        Args:
-            fee_per_day: The fee charged per day for overdue books.
-
-        Returns:
-            The total late fees owed.
-        """
-        total_fee = 0.0
-        for book in self._borrowed_books:
-            if book.is_overdue():
-                total_fee += book.days_overdue() * fee_per_day
-        return total_fee
+        """Calculate total late fees for overdue books."""
+        return sum(book.calculate_late_fee(fee_per_day) for book in self._borrowed_books)
 
     def get_details(self) -> str:
         """
