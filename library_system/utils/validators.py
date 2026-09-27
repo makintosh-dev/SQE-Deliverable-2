@@ -1,7 +1,6 @@
 """Validation utilities for the library management system."""
 
 import re
-from typing import bool
 
 
 def validate_email(email: str) -> bool:

@@ -69,19 +69,28 @@ class Library:
         """
         Remove a book from the library by ISBN.
 
-        Args:
-            isbn: The ISBN of the book to remove.
-
-        Returns:
-            The removed book.
-
         Raises:
             BookNotFoundError: If the book is not found.
+            ValueError: If the book is currently borrowed.
         """
         if isbn not in self._books:
             raise BookNotFoundError(isbn)
 
+        book = self._books[isbn]
+        if not book.is_available():
+            borrower_name = book.borrower.name if book.borrower else "a member"
+            raise ValueError(
+                f"Cannot remove book '{book.title}'. It is currently borrowed by {borrower_name}."
+            )
+
         return self._books.pop(isbn)
+
+    @staticmethod
+    def _matches_query(target: str, query: str, exact: bool) -> bool:
+        """Match target string against query either exactly or as case-insensitive substring."""
+        if exact:
+            return target == query
+        return query.lower() in target.lower()
 
     def get_book(self, isbn: str) -> Book:
         """
@@ -102,44 +111,18 @@ class Library:
         return self._books[isbn]
 
     def find_books_by_title(self, title: str, exact: bool = False) -> List[Book]:
-        """
-        Find books by title.
-
-        Args:
-            title: The title to search for.
-            exact: If True, search for exact matches only.
-
-        Returns:
-            A list of matching books.
-        """
-        if exact:
-            return [book for book in self._books.values() if book.title == title]
-        else:
-            title_lower = title.lower()
-            return [
-                book for book in self._books.values()
-                if title_lower in book.title.lower()
-            ]
+        """Find books by title."""
+        return [
+            book for book in self._books.values()
+            if self._matches_query(book.title, title, exact)
+        ]
 
     def find_books_by_author(self, author: str, exact: bool = False) -> List[Book]:
-        """
-        Find books by author.
-
-        Args:
-            author: The author to search for.
-            exact: If True, search for exact matches only.
-
-        Returns:
-            A list of matching books.
-        """
-        if exact:
-            return [book for book in self._books.values() if book.author == author]
-        else:
-            author_lower = author.lower()
-            return [
-                book for book in self._books.values()
-                if author_lower in book.author.lower()
-            ]
+        """Find books by author."""
+        return [
+            book for book in self._books.values()
+            if self._matches_query(book.author, author, exact)
+        ]
 
     def find_books_by_category(self, category: BookCategory) -> List[Book]:
         """
@@ -250,24 +233,11 @@ class Library:
         return self._members[member_id]
 
     def find_members_by_name(self, name: str, exact: bool = False) -> List[Member]:
-        """
-        Find members by name.
-
-        Args:
-            name: The name to search for.
-            exact: If True, search for exact matches only.
-
-        Returns:
-            A list of matching members.
-        """
-        if exact:
-            return [member for member in self._members.values() if member.name == name]
-        else:
-            name_lower = name.lower()
-            return [
-                member for member in self._members.values()
-                if name_lower in member.name.lower()
-            ]
+        """Find members by name."""
+        return [
+            member for member in self._members.values()
+            if self._matches_query(member.name, name, exact)
+        ]
 
     def get_all_members(self) -> List[Member]:
         """
