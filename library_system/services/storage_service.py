@@ -46,7 +46,7 @@ class StorageService:
             with open(self.storage_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
         except IOError as e:
-            raise IOError(f"Failed to save library data: {e}")
+            raise IOError(f"Failed to save library data: {e}") from e
 
     def load_library(self) -> Optional[Library]:
         """
@@ -66,9 +66,9 @@ class StorageService:
             with open(self.storage_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
         except IOError as e:
-            raise IOError(f"Failed to load library data: {e}")
+            raise IOError(f"Failed to load library data: {e}") from e
         except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON data: {e}")
+            raise ValueError(f"Invalid JSON data: {e}") from e
 
         return self._deserialize_library(data)
 
@@ -116,9 +116,11 @@ class StorageService:
                 max_books=member_data.get("max_books", Member.DEFAULT_MAX_BOOKS),
             )
 
-            # Restore membership date
+            # Restore membership date cleanly
             if "membership_date" in member_data:
-                member._membership_date = datetime.fromisoformat(member_data["membership_date"])
+                member.restore_membership_date(
+                    datetime.fromisoformat(member_data["membership_date"])
+                )
 
             members_dict[member.member_id] = member
             library.add_member(member)
@@ -131,14 +133,18 @@ class StorageService:
                     book = books_dict[book_data["isbn"]]
                     member = members_dict[borrower_id]
 
-                    # Restore the borrowing relationship
-                    member._borrowed_books.append(book)
-                    book._borrower = member
-
-                    if book_data.get("borrowed_date"):
-                        book._borrowed_date = datetime.fromisoformat(book_data["borrowed_date"])
-                    if book_data.get("due_date"):
-                        book._due_date = datetime.fromisoformat(book_data["due_date"])
+                    borrowed_date = (
+                        datetime.fromisoformat(book_data["borrowed_date"])
+                        if book_data.get("borrowed_date")
+                        else None
+                    )
+                    due_date = (
+                        datetime.fromisoformat(book_data["due_date"])
+                        if book_data.get("due_date")
+                        else None
+                    )
+                    member.restore_borrowed_book(book)
+                    book.restore_borrow_state(member, borrowed_date, due_date)
 
         return library
 
@@ -153,7 +159,7 @@ class StorageService:
             try:
                 self.storage_path.unlink()
             except IOError as e:
-                raise IOError(f"Failed to delete storage file: {e}")
+                raise IOError(f"Failed to delete storage file: {e}") from e
 
     def storage_exists(self) -> bool:
         """

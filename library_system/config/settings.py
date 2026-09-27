@@ -47,7 +47,7 @@ class Settings:
             with open(config_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in configuration file: {e}")
+            raise ValueError(f"Invalid JSON in configuration file: {e}") from e
 
         return cls(**data)
 
@@ -75,7 +75,7 @@ class Settings:
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2)
         except IOError as e:
-            raise IOError(f"Failed to save configuration: {e}")
+            raise IOError(f"Failed to save configuration: {e}") from e
 
     @classmethod
     def load_or_default(cls, config_path: Optional[Path] = None) -> "Settings":
