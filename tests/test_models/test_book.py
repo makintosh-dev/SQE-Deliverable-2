@@ -99,3 +99,27 @@ class TestBook:
         assert data["category"] == "Fiction"
         assert data["publication_year"] == 2020
         assert data["is_available"] is True
+
+    def test_calculate_late_fee(self):
+        """Test calculating late fees on Book entity."""
+        book = Book("Late Book", "Test Author", "9780743273565")
+        member = Member("Alice", "alice@example.com", "M001")
+        book.borrow(member)
+        assert book.calculate_late_fee(0.50) == 0.0
+
+        book._due_date = datetime.now() - timedelta(days=4)
+        assert book.calculate_late_fee(0.50) == 2.00
+        assert book.calculate_late_fee(1.00) == 4.00
+
+    def test_restore_borrow_state(self):
+        """Test restoring borrow state for deserialization."""
+        book = Book("Hydrated Book", "Author", "9780743273565")
+        member = Member("Bob", "bob@example.com", "M002")
+        borrow_date = datetime.now() - timedelta(days=10)
+        due_date = datetime.now() + timedelta(days=4)
+
+        book.restore_borrow_state(member, borrow_date, due_date)
+        assert book.borrower == member
+        assert book.borrowed_date == borrow_date
+        assert book.due_date == due_date
+        assert not book.is_available()

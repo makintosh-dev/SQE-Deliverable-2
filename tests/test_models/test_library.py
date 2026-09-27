@@ -208,3 +208,15 @@ class TestLibrary:
         assert stats["overdue_books"] == 1
         assert stats["total_members"] == 1
         assert stats["members_with_overdue"] == 1
+
+    def test_cannot_remove_borrowed_book(self):
+        """Test that removing a book currently on loan raises a ValueError."""
+        library = Library()
+        book = Book("The Hobbit", "J.R.R. Tolkien", "9780547928227")
+        member = Member("Frodo Baggins", "frodo@shire.com", "M100")
+        library.add_book(book)
+        library.add_member(member)
+        member.borrow_book(book)
+
+        with pytest.raises(ValueError, match="currently borrowed"):
+            library.remove_book(book.isbn)

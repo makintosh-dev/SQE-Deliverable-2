@@ -138,3 +138,19 @@ class TestMember:
         assert data["member_id"] == "M001"
         assert data["max_books"] == 5
         assert data["borrowed_books"] == []
+
+    def test_restore_borrowed_book(self):
+        """Test restoring borrowed book references."""
+        member = Member("John Doe", "john@example.com", "M001")
+        book = Book("Restored Book", "Author", "9780743273565")
+        member.restore_borrowed_book(book)
+        assert book in member.get_borrowed_books()
+        member.restore_borrowed_book(book)
+        assert len(member.get_borrowed_books()) == 1
+
+    def test_restore_membership_date(self):
+        """Test restoring membership date during deserialization."""
+        member = Member("John Doe", "john@example.com", "M001")
+        old_date = datetime(2020, 1, 15, 10, 30)
+        member.restore_membership_date(old_date)
+        assert member.membership_date == old_date
